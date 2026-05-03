@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TravelApp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<template id="__bundler_thumbnail" data-bg-color="#ffffff">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <!-- sidebar -->
+    <rect x="0" y="0" width="120" height="800" fill="#f5f5f5"/>
+    <rect x="20" y="30" width="80" height="14" rx="4" fill="#1a1a1a"/>
+    <rect x="20" y="70" width="70" height="10" rx="3" fill="#ccc"/>
+    <rect x="20" y="92" width="70" height="10" rx="3" fill="#1a1a1a"/>
+    <rect x="20" y="114" width="55" height="10" rx="3" fill="#ccc"/>
+    <rect x="20" y="136" width="60" height="10" rx="3" fill="#ccc"/>
+    <rect x="20" y="158" width="50" height="10" rx="3" fill="#ccc"/>
+    <!-- dividers -->
+    <rect x="120" y="0" width="1" height="800" fill="#e8e8e8"/>
+    <rect x="320" y="0" width="1" height="800" fill="#e8e8e8"/>
+    <rect x="760" y="0" width="1" height="800" fill="#e8e8e8"/>
+    <!-- header -->
+    <rect x="0" y="0" width="1200" height="48" fill="#fff"/>
+    <rect x="0" y="47" width="1200" height="1" fill="#e8e8e8"/>
+    <rect x="140" y="17" width="80" height="13" rx="3" fill="#1a1a1a"/>
+    <rect x="340" y="17" width="90" height="13" rx="3" fill="#1a1a1a"/>
+    <rect x="570" y="17" width="60" height="13" rx="3" fill="#1a1a1a"/>
+    <rect x="780" y="17" width="70" height="13" rx="3" fill="#1a1a1a"/>
+    <!-- contact list items -->
+    <circle cx="150" cy="90" r="14" fill="none" stroke="#ddd" stroke-width="1.5"/>
+    <rect x="175" y="82" width="80" height="9" rx="2" fill="#333"/>
+    <rect x="175" y="97" width="60" height="7" rx="2" fill="#ccc"/>
+    <rect x="0" y="117" width="320" height="1" fill="#e8e8e8"/>
+    <circle cx="150" cy="140" r="14" fill="none" stroke="#ddd" stroke-width="1.5"/>
+    <rect x="175" y="132" width="90" height="9" rx="2" fill="#333"/>
+    <rect x="175" y="147" width="60" height="7" rx="2" fill="#ccc"/>
+    <!-- profile text lines -->
+    <rect x="345" y="72" width="380" height="10" rx="2" fill="#333"/>
+    <rect x="345" y="90" width="390" height="10" rx="2" fill="#ddd"/>
+    <rect x="345" y="108" width="350" height="10" rx="2" fill="#ddd"/>
+    <!-- tags -->
+    <rect x="345" y="140" width="70" height="24" rx="12" fill="none" stroke="#ddd" stroke-width="1.5"/>
+    <rect x="425" y="140" width="80" height="24" rx="12" fill="none" stroke="#ddd" stroke-width="1.5"/>
+    <rect x="515" y="140" width="90" height="24" rx="12" fill="none" stroke="#ddd" stroke-width="1.5"/>
+  </svg>
+</template>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #root { height: 100%; width: 100%; }
+body { font-family: 'Inter', system-ui, sans-serif; background: #fff; color: #1a1a1a; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+* { -webkit-font-smoothing: antialiased; }
+input { font-family: 'Inter', system-ui, sans-serif; }
+button { font-family: 'Inter', system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useRef, useEffect } = React;
+
+// ── colours ──────────────────────────────────────────────────────────────────
+const SEP   = "#e8e8e8";   // column / row separators
+const MUTED = "#999";      // secondary text
+const LIGHT = "#f5f5f5";   // tag background
+const ACCENT = "#1a1a1a";  // active nav item (bold)
+
+// ── NAV items ─────────────────────────────────────────────────────────────────
+const NAV_ITEMS = [
+  "Чат с Агентом",
+  "Контакты",
+  "Группы",
+  "Агенты",
+  "Места",
+  "Туры",
+  "Соответствия",
+  "Бронирования",
+  "Медиа",
+  "Помощь",
+  "Настройки",
+];
+
+// ── contacts data ─────────────────────────────────────────────────────────────
+const CONTACTS = [
+  { id: 1, name: "Иван Петров",       meta: "Gender, Age, Generation", role: "я" },
+  { id: 2, name: "Дарья Петрова",     meta: "Gender, Age, Generation", role: "жена" },
+  { id: 3, name: "Александр Петров",  meta: "Gender, Age, Generation", role: "сын" },
+  { id: 4, name: "Рони",              meta: "Gender, Age, Generation", role: "собака" },
+];
+
+const PROFILES = {
+  1: {
+    desc: "Вы — исследователь с душой гурмана. Предпочитаете погружаться в историю и местную культуру, избегаете туристических маршрутов и больших толп. В поездках важен комфортный темп — успеть всё, но без спешки. Цените аутентичные места и локальную кухню больше, чем известные рестораны.",
+    tags: ["История", "Архитектура", "Гастрономия", "Фотография", "Музеи"],
+  },
+  2: {
+    desc: "Ценит комфорт и эстетику. Любит находить уникальные местные магазины и рынки, посещать галереи современного искусства. Предпочитает неспешный ритм.",
+    tags: ["Шопинг", "Кулинария", "Искусство", "Йога", "Природа"],
+  },
+  3: {
+    desc: "Фанат японской поп-культуры. Мечтает посетить Akihabara и Harajuku. Энергичный, любит активные прогулки и необычные места.",
+    tags: ["Аниме", "Технологии", "Уличная еда", "Аркады", "Манга"],
+  },
+  4: {
+    desc: "Любит активные прогулки в парках. Нужно учитывать наличие pet-friendly отелей и зон выгула.",
+    tags: ["Прогулки", "Парки", "Вода", "Игры"],
+  },
+};
+
+// ── agents data ───────────────────────────────────────────────────────────────
+const AGENTS = [
+  { id: 1, name: "Аватар",        meta: "♀, 35 Z", role: "#avatar" },
+  { id: 2, name: "Гид",           meta: "♀, 35 Y", role: "#guide" },
+  { id: 3, name: "Психолог",      meta: "♀, 43 X", role: "#psychologist" },
+  { id: 4, name: "Исследователь", meta: "♂, 43 X", role: "#researcher" },
+  { id: 5, name: "Официант",      meta: "♀, 27 Z", role: "#waiter" },
+];
+
+const AGENT_PROFILES = {
+  1: { desc: "Универсальный ассистент для планирования путешествий. Знает всё о вас и вашей семье. Координирует остальных агентов и формирует персонализированные рекомендации.", tags: ["Планирование", "Координация", "Рекомендации"] },
+  2: { desc: "Специализируется на достопримечательностях и маршрутах. Учитывает интересы всей группы и предлагает нестандартные места.", tags: ["Маршруты", "Места", "Экскурсии"] },
+  3: { desc: "Анализирует стиль путешествия каждого члена группы, помогает создать комфортный темп поездки для всей семьи.", tags: ["Совместимость", "Профиль", "Темп"] },
+  4: { desc: "Собирает актуальную информацию: цены, рейтинги, отзывы, погода. Даёт фактическую базу для принятия решений.", tags: ["Аналитика", "Цены", "Отзывы"] },
+  5: { desc: "Подбирает рестораны и кафе под вкус каждого участника группы. Рекомендует локальные блюда и уличную еду.", tags: ["Рестораны", "Кухня", "Еда"] },
+};
+
+// ── CHAT data ─────────────────────────────────────────────────────────────────
+const INITIAL_MESSAGES = [
+  { id: 1, role: "ai",   text: "Здравствуйте! Я ваш AI-ассистент для планирования путешествий. Чем могу помочь?" },
+  { id: 2, role: "user", text: "Привет! Хочу спланировать поездку в Токио на неделю с семьёй." },
+];
+
+// ── tiny SVG icons ─────────────────────────────────────────────────────────────
+// ── Coloured avatar circles ────────────────────────────────────────────────
+function AvatarCircle({ color }) {
+  return (
+    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+    </div>
+  );
+}
+function AgentAvatar()  { return <AvatarCircle color="#6155F5" />; }
+function ContactAvatar(){ return <AvatarCircle color="#34C759" />; }
+
+const Ico = {
+  Menu:   () => <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect y="0"  width="16" height="1.5" rx=".75" fill="#1a1a1a"/><rect y="5"  width="16" height="1.5" rx=".75" fill="#1a1a1a"/><rect y="10" width="16" height="1.5" rx=".75" fill="#1a1a1a"/></svg>,
+  Plus:   () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#1a1a1a" strokeWidth="1.5" strokeLinecap="round"><line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/></svg>,
+  More:   () => <svg width="16" height="4"  viewBox="0 0 16 4"  fill="#bbb"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="14" cy="2" r="1.5"/></svg>,
+  Doc:    () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+  Gear:   () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
+  Tag:    () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+  Edit:   () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  Save:   () => <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+  Send:   () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+  Person: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+};
+
+// ── shared column divider ─────────────────────────────────────────────────────
+const ColDiv = () => <div style={{ width: 1, background: SEP, flexShrink: 0 }} />;
+
+// ── header row height ─────────────────────────────────────────────────────────
+const HDR_H = 48;
+
+// ── ContactsView ──────────────────────────────────────────────────────────────
+function ContactsView({ activeNav }) {
+  const [selected, setSelected] = useState(1);
+  const [tags, setTags] = useState({
+    1: ["История", "Архитектура", "Гастрономия", "Фотография", "Музеи"],
+    2: ["Шопинг", "Кулинария", "Искусство", "Йога", "Природа"],
+    3: ["Аниме", "Технологии", "Уличная еда", "Аркады", "Манга"],
+    4: ["Прогулки", "Парки", "Вода", "Игры"],
+  });
+  const [changeInput, setChangeInput] = useState("");
+
+  const removeTag = (id, tag) => setTags(t => ({ ...t, [id]: t[id].filter(x => x !== tag) }));
+  const profile = PROFILES[selected];
+  const contactTags = tags[selected] || [];
+
+  const listItems  = activeNav === "Агенты" ? AGENTS   : CONTACTS;
+
+  return (
+    <>
+      {/* ── col 2 content ── */}
+      <div style={{ width: 240, flexShrink: 0, overflowY: "auto", borderRight: `1px solid ${SEP}` }}>
+        {listItems.map((c, i) => (
+          <div key={c.id} onClick={() => setSelected(c.id)} style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "12px 18px",
+            borderBottom: i < listItems.length - 1 ? `1px solid ${SEP}` : "none",
+            cursor: "pointer",
+            background: selected === c.id ? "#fafafa" : "#fff",
+          }}>
+            {activeNav === "Агенты" ? <AgentAvatar /> : <ContactAvatar />}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 500, color: "#1a1a1a" }}>{c.name}</div>
+              <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1 }}>{c.meta}</div>
+              <div style={{ fontSize: 11.5, color: MUTED }}>{c.role}</div>
+            </div>
+            <button style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: 0.5 }}><Ico.More /></button>
+          </div>
+        ))}
+      </div>
+
+      {/* ── col 3: Профиль ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "22px 22px 0" }}>
+          <div style={{ display: "flex", gap: 10 }}>
+            <p style={{ flex: 1, fontSize: 14, lineHeight: 1.65, color: "#1a1a1a" }}>{profile.desc}</p>
+            <button style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: 0.5, alignSelf: "flex-start", flexShrink: 0 }}><Ico.More /></button>
+          </div>
+
+          {/* tags */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 18 }}>
+            {contactTags.map(tag => (
+              <span key={tag} style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                fontSize: 13, padding: "5px 11px", borderRadius: 20,
+                border: `1px solid #ddd`, background: "#fff",
+                color: "#1a1a1a",
+              }}>
+                {tag}
+                <button onClick={() => removeTag(selected, tag)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1, color: MUTED, fontSize: 14 }}>×</button>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── col 4: Что изменилось ── */}
+      <div style={{ width: 240, flexShrink: 0, display: "flex", flexDirection: "column", borderLeft: `1px solid ${SEP}` }}>
+        <div style={{ flex: 1, padding: "18px 18px 0", display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <p style={{ flex: 1, fontSize: 13.5, lineHeight: 1.5, color: "#1a1a1a" }}>Что изменилось в ваших предпочтениях?</p>
+            <button style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: 0.5, alignSelf: "flex-start", flexShrink: 0 }}><Ico.More /></button>
+          </div>
+        </div>
+        {/* input */}
+        <div style={{ padding: "12px 16px 20px", borderTop: `1px solid ${SEP}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, border: `1px solid ${SEP}`, borderRadius: 8, padding: "8px 12px" }}>
+            <input
+              value={changeInput}
+              onChange={e => setChangeInput(e.target.value)}
+              placeholder="Например, стал веганом"
+              style={{ flex: 1, border: "none", outline: "none", fontSize: 13, color: "#1a1a1a", background: "none" }}
+            />
+            <button style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}><Ico.Send /></button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── historyBlocks — derive semantic summaries from messages ──────────────────
+function historyBlocks(messages) {
+  const blocks = [];
+  const userMsgs = messages.filter(m => m.role === "user");
+  if (userMsgs.length > 0) {
+    blocks.push({ label: "Запрос пользователя", summary: userMsgs[userMsgs.length - 1].text });
+  }
+  if (messages.length > 2) {
+    blocks.push({ label: "Контекст диалога", summary: "Обсуждается планирование поездки. Агент уточняет детали группы и даты." });
+  }
+  if (messages.length > 5) {
+    blocks.push({ label: "Выявленные потребности", summary: "Семейная поездка, комфортный темп, гастрономия и культура." });
+  }
+  if (messages.length > 7) {
+    blocks.push({ label: "Следующий шаг", summary: "Подобрать варианты маршрутов с учётом интересов всех участников." });
+  }
+  return blocks;
+}
+
+// ── ChatView ──────────────────────────────────────────────────────────────────
+function ChatView() {
+  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
+  const [activeAgent, setActiveAgent] = useState(1);
+  const endRef = useRef(null);
+
+  useEffect(() => {
+    if (endRef.current) endRef.current.scrollIntoView({ block: "nearest" });
+  }, [messages, typing]);
+
+  const QUICK = ["Хочу спланировать поездку", "Подобрать места для посещения", "Создать маршрут", null];
+  const hasUserMsg = messages.some(m => m.role === "user");
+
+  const send = (text) => {
+    if (!text.trim()) return;
+    setMessages(m => [...m, { id: Date.now(), role: "user", text }]);
+    setInput("");
+    setTyping(true);
+    setTimeout(() => {
+      setMessages(m => [...m, { id: Date.now() + 1, role: "ai", text: "Хорошо, давайте разберём это подробнее. Какие даты вас интересуют и сколько человек будет в группе?" }]);
+      setTyping(false);
+    }, 1200);
+  };
+
+  return (
+    <>
+      {/* col 2: agents list */}
+      <div style={{ width: 240, flexShrink: 0, overflowY: "auto", borderRight: `1px solid ${SEP}` }}>
+        {AGENTS.map((a, i) => (
+          <div key={a.id} onClick={() => setActiveAgent(a.id)} style={{
+            display: "flex", alignItems: "center", gap: 10,
+            padding: "12px 18px",
+            borderBottom: i < AGENTS.length - 1 ? `1px solid ${SEP}` : "none",
+            cursor: "pointer",
+            background: activeAgent === a.id ? "#fafafa" : "#fff",
+          }}>
+            <AgentAvatar />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 500, color: "#1a1a1a" }}>{a.name}</div>
+              <div style={{ fontSize: 11.5, color: MUTED, marginTop: 1 }}>{a.meta}</div>
+              <div style={{ fontSize: 11.5, color: MUTED }}>{a.role}</div>
+            </div>
+            <button style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: 0.5 }}><Ico.More /></button>
+          </div>
+        ))}
+      </div>
+
+      {/* col 3: messages */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+          {messages.map((msg, idx) => (
+            <React.Fragment key={msg.id}>
+              <div style={{ display: "flex", gap: 10, flexDirection: msg.role === "user" ? "row-reverse" : "row", alignItems: "flex-end" }}>
+                {msg.role === "ai" && <AvatarCircle color="#6155F5" />}
+                {msg.role === "user" && <AvatarCircle color="#34C759" />}
+                <div style={{
+                  maxWidth: "60%", padding: "9px 13px",
+                  borderRadius: msg.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px",
+                  background: msg.role === "user" ? "#F4EFE7" : "#ffffff",
+                  color: "#000000", fontSize: 13.5, lineHeight: 1.55,
+                }}>{msg.text}</div>
+              </div>
+              {/* Quick actions after first AI message — aligned with agent bubble */}
+              {idx === 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, paddingLeft: 42 }}>
+                  {QUICK.map((q, i) => q === null ? (
+                    <button key="add" onClick={() => {}} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6, border: "none", background: "none", cursor: "pointer", padding: "2px 0", color: MUTED }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      <span style={{ fontSize: 12.5, fontFamily: "inherit" }}>Отправить</span>
+                    </button>
+                  ) : (
+                    <button key={q} onClick={() => send(q)} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 8, border: "none", background: "none", cursor: "pointer", fontSize: 13.5, color: "#1a1a1a", lineHeight: 1.4, padding: "2px 0" }}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#ccc" strokeWidth="1.2"><circle cx="7" cy="7" r="6"/></svg>
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+
+          {typing && (
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+              <AvatarCircle color="#6155F5" />
+              <div style={{ padding: "9px 14px", borderRadius: "12px 12px 12px 2px", background: "#f5f5f5", display: "flex", gap: 4, alignItems: "center" }}>
+                {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: "#ccc", animation: `dot .9s ${i*.15}s infinite` }} />)}
+              </div>
+            </div>
+          )}
+          <div ref={endRef} />
+        </div>
+        <div style={{ padding: "12px 24px 20px", borderTop: `1px solid ${SEP}` }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", border: `1px solid ${SEP}`, borderRadius: 8, padding: "9px 14px" }}>
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && send(input)}
+              placeholder="Написать сообщение..."
+              style={{ flex: 1, border: "none", outline: "none", fontSize: 14, color: "#1a1a1a", background: "none" }}
+            />
+            <button onClick={() => send(input)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", padding: 0 }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* col 4: история / суммаризация */}
+      <div style={{ width: 260, flexShrink: 0, borderLeft: `1px solid ${SEP}`, overflowY: "auto" }}>
+        <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
+          {historyBlocks(messages).map((block, i) => (
+            <div key={i}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 5 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#1a1a1a" }}>{block.label}</div>
+                <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2, opacity: 0.4, flexShrink: 0 }}><Ico.More /></button>
+              </div>
+              <div style={{ fontSize: 13, color: "#1a1a1a", lineHeight: 1.55 }}>{block.summary}</div>
+            </div>
+          ))}
+          {messages.length <= 3 && (
+            <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.6 }}>
+              История появится по мере развития диалога
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── PlaceholderView ───────────────────────────────────────────────────────────
+function PlaceholderView({ title }) {
+  return (
+    <>
+      <div style={{ width: 240, flexShrink: 0, display: "flex", flexDirection: "column" }}>
+        <div style={{ height: HDR_H, padding: "0 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${SEP}` }}>
+          <span style={{ fontSize: 16, fontWeight: 700 }}>{title}</span>
+          <button style={{ background: "none", border: "none", cursor: "pointer", padding: 2 }}><Ico.Plus /></button>
+        </div>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 13, color: MUTED }}>Список пуст</span>
+        </div>
+      </div>
+      <ColDiv />
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 8 }}>
+        <span style={{ fontSize: 13, color: MUTED }}>Выберите элемент слева</span>
+      </div>
+      <ColDiv />
+      <div style={{ width: 240, flexShrink: 0 }}>
+        <div style={{ height: HDR_H, borderBottom: `1px solid ${SEP}` }} />
+      </div>
+    </>
+  );
+}
+
+// ── APP ───────────────────────────────────────────────────────────────────────
+function App() {
+  const [activeNav, setActiveNav] = useState("Контакты");
+  const [collapsed, setCollapsed] = useState(false);
+  const [tweaks, setTweak] = useTweaks(/*EDITMODE-BEGIN*/{"accent":"#1a1a1a"}/*EDITMODE-END*/);
+
+  const NAV_WIDTH = collapsed ? 52 : 200;
+
+  const renderContent = () => {
+    if (activeNav === "Чат с Агентом") return <ChatView />;
+    if (activeNav === "Контакты" || activeNav === "Агенты") return <ContactsView activeNav={activeNav} />;
+    return <PlaceholderView title={activeNav} />;
+  };
+
+  const listTitle = activeNav === "Агенты" ? "Агенты" : activeNav === "Чат с Агентом" ? "Действия" : activeNav;
+
+  const headerCols = () => {
+    if (activeNav === "Чат с Агентом") return (
+      <>
+        <ColDiv />
+        <div style={{ width: 240, flexShrink: 0, display: "flex", alignItems: "center", padding: "0 20px" }}>
+          <span style={{ fontSize: 16, fontWeight: 700 }}>Агенты</span>
+        </div>
+        <ColDiv />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", padding: "0 24px" }}>
+          <span style={{ fontSize: 16, fontWeight: 700 }}>Чат</span>
+        </div>
+        <ColDiv />
+        <div style={{ width: 260, flexShrink: 0, display: "flex", alignItems: "center", padding: "0 20px" }}>
+          <span style={{ fontSize: 16, fontWeight: 700 }}>История</span>
+        </div>
+      </>
+    );
+    return (
+      <>
+        <ColDiv />
+        <div style={{ width: 240, flexShrink: 0, display: "flex", alignItems: "center", gap: 10, padding: "0 20px" }}>
+          <span style={{ fontSize: 16, fontWeight: 700 }}>{listTitle}</span>
+          <button style={{ background: "none", border: "none", cursor: "pointer", display: "flex", padding: 4 }}><Ico.Plus /></button>
+        </div>
+        <ColDiv />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 14, padding: "0 22px" }}>
+          <span style={{ fontSize: 16, fontWeight: 700, flex: 1 }}>Профиль</span>
+          <Ico.Doc /><Ico.Gear /><Ico.Tag /><Ico.Edit /><Ico.Save />
+        </div>
+        <ColDiv />
+        <div style={{ width: 240, flexShrink: 0, display: "flex", alignItems: "center", padding: "0 20px" }}>
+          <span style={{ fontSize: 16, fontWeight: 700 }}>Изменить</span>
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "#fff" }}>
+
+      {/* ── top header row ── */}
+      <div style={{ display: "flex", height: HDR_H, borderBottom: `1px solid ${SEP}`, flexShrink: 0, alignItems: "center" }}>
+        <div style={{ width: NAV_WIDTH, flexShrink: 0, display: "flex", alignItems: "center", gap: collapsed ? 0 : 10, padding: collapsed ? "0 14px" : "0 18px", transition: "width .2s", overflow: "hidden" }}>
+          <button onClick={() => setCollapsed(c => !c)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", flexShrink: 0 }}>
+            <Ico.Menu />
+          </button>
+          {!collapsed && <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: -0.3, whiteSpace: "nowrap" }}>TravelApp</span>}
+        </div>
+        {headerCols()}
+      </div>
+
+      {/* ── main area ── */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+
+        {/* ── col 1: nav ── */}
+        <div style={{ width: NAV_WIDTH, flexShrink: 0, borderRight: `1px solid ${SEP}`, overflowY: "auto", overflowX: "hidden", transition: "width .2s" }}>
+          <nav style={{ paddingTop: 8 }}>
+            {NAV_ITEMS.map(item => (
+              <button key={item} onClick={() => setActiveNav(item)} title={item} style={{
+                display: "flex", alignItems: "center", gap: 10,
+                width: "100%", textAlign: "left",
+                padding: collapsed ? "11px 0" : "10px 20px",
+                justifyContent: collapsed ? "center" : "flex-start",
+                border: "none", background: "none",
+                fontSize: 14.5, cursor: "pointer",
+                fontWeight: activeNav === item ? 600 : 400,
+                color: activeNav === item ? "#1a1a1a" : "#555",
+                lineHeight: 1.4,
+                transition: "color .12s",
+                overflow: "hidden",
+              }}>
+                {/* placeholder circle icon */}
+                <div style={{
+                  width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+                  border: `1.5px solid ${activeNav === item ? "#1a1a1a" : "#ccc"}`,
+                  background: activeNav === item ? "#1a1a1a" : "none",
+                  transition: "all .15s",
+                }} />
+                {!collapsed && <span style={{ whiteSpace: "nowrap" }}>{item}</span>}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* ── cols 2-4: dynamic content ── */}
+        <div style={{ flex: 1, display: "flex", overflow: "hidden", minWidth: 0 }}>
+          {renderContent()}
+        </div>
+      </div>
+
+      <TweaksPanel>
+        <TweakSection title="Навигация">
+          <TweakRadio tweakKey="accent" label="Стиль активного пункта" options={["#1a1a1a","#e8673a","#2563eb"]} />
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+// animation
+const s = document.createElement("style");
+s.textContent = `@keyframes dot{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}`;
+document.head.appendChild(s);
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
